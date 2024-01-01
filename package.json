@@ -10,7 +10,8 @@
     "lint:fix": "next lint --fix",
     "lint:style": "stylelint src/**/*.css",
     "lint:style:fix": "stylelint --fix src/**/*.css",
-    "format": "prettier --write --ignore-path .gitignore './**/*.{js,jsx,ts,tsx,json}'"
+    "lint:format": "prettier --write --ignore-path .gitignore './**/*.{js,jsx,ts,tsx,json}'",
+    "lint:all:fix": "yarn lint:fix && yarn lint:style:fix && yarn lint:format"
   },
   "dependencies": {
     "next": "14.0.4",
