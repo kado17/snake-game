@@ -39,3 +39,7 @@
 .grid__snake {
   background-color: red;
 }
+
+.grid__food {
+  background-color: pink;
+}

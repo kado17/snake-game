@@ -3,7 +3,7 @@ import Image from 'next/image';
 import styles from '@/styles/index.module.css';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
-type Coordinate = {
+type Coordinates = {
   x: number;
   y: number;
 };
@@ -18,6 +18,7 @@ type Direction = (typeof Direction)[keyof typeof Direction];
 const Grid = {
   BLANK: 'BLANK',
   SNAKE: 'SNAKE',
+  FOOD: 'FOOD',
 } as const;
 type Grid = (typeof Grid)[keyof typeof Grid];
 
@@ -25,14 +26,32 @@ const BOARD_SIZE_X = 20;
 const BOARD_SIZE_Y = 20;
 const BOARD: Grid[][] = Array.from(new Array(BOARD_SIZE_Y), (_) => new Array(BOARD_SIZE_X).fill(Grid.BLANK));
 
+const randomCoordinates = (x_max: number, y_max: number): Coordinates => {
+  return { x: Math.floor(Math.random() * x_max), y: Math.floor(Math.random() * y_max) };
+};
+
+const isDuplicateCoordinates = (checkCoordinates: Coordinates, segments: Coordinates[]) => {
+  return segments.some((segment) => segment.x == checkCoordinates.x && segment.y == checkCoordinates.y);
+};
+
+const createNewCoorinates = (existCoordinates: Coordinates[]) => {
+  let newCoordinates;
+  do {
+    newCoordinates = randomCoordinates(BOARD_SIZE_X, BOARD_SIZE_Y);
+  } while (isDuplicateCoordinates(newCoordinates, existCoordinates));
+  return newCoordinates;
+};
+
 const Home: NextPage = () => {
-  const [snake, setSnake] = useState<Coordinate[]>([{ x: 0, y: 0 }]);
+  const [snake, setSnake] = useState<Coordinates[]>([{ x: 0, y: 0 }]);
   const [direction, setDirection] = useState<Direction>(Direction.DOWN);
   const [isGameover, setIsGameover] = useState(false);
+  const [food, setFood] = useState<Coordinate>(createNewCoorinates(snake));
+
   const moveSnake = useCallback(() => {
     if (isGameover) return;
-    const newSnake = [...snake];
-    const head = newSnake[0];
+    const newSnake = JSON.parse(JSON.stringify(snake));
+    const head = { ...newSnake[0] };
 
     switch (direction) {
       case Direction.UP:
@@ -48,19 +67,27 @@ const Home: NextPage = () => {
         head.x += 1;
         break;
       default:
-        break;
+        return;
     }
-
     newSnake.unshift(head);
-    console.log(head.x, head.y);
-    newSnake.pop();
-    if (head.x < 0 || head.x >= BOARD_SIZE_X || head.y < 0 || head.y >= BOARD_SIZE_Y) {
-      console.log('GAMEOVER');
+    if (head.x === food.x && head.y === food.y) {
+      const newFood = createNewCoorinates(snake);
+      setFood(newFood);
+    } else {
+      newSnake.pop();
+    }
+    if (
+      head.x < 0 ||
+      head.x >= BOARD_SIZE_X ||
+      head.y < 0 ||
+      head.y >= BOARD_SIZE_Y ||
+      isDuplicateCoordinates(head, newSnake.slice(1))
+    ) {
       setIsGameover(true);
     } else {
       setSnake(newSnake);
     }
-  }, [snake, direction, isGameover]);
+  }, [snake, food, direction, isGameover]);
 
   useEffect(() => {
     const intervalId = setInterval(moveSnake, 200);
@@ -101,8 +128,9 @@ const Home: NextPage = () => {
     snake.forEach((condinate) => {
       newBoard[condinate.y][condinate.x] = Grid.SNAKE;
     });
+    newBoard[food.y][food.x] = Grid.FOOD;
     return newBoard;
-  }, [snake]);
+  }, [snake, food]);
 
   return (
     <div className={styles.container}>
@@ -116,6 +144,7 @@ const Home: NextPage = () => {
                   styles.grid,
                   (x + y) % 2 == 0 ? styles.grid__even : styles.grid__odd,
                   item == Grid.SNAKE ? styles.grid__snake : '',
+                  item == Grid.FOOD ? styles.grid__food : '',
                 ].join(' ')}
               ></div>
             ))}
