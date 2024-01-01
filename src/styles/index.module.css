@@ -35,3 +35,7 @@
 .grid__even {
   background-color: #32cd32;
 }
+
+.grid__snake {
+  background-color: red;
+}
