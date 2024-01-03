@@ -1,5 +1,6 @@
 import styles from '@/styles/index.module.css';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { NextPage } from 'next';
 import classnames from 'classnames';
 
 type Coordinates = {
@@ -43,17 +44,17 @@ const createNewFood = (snake: Coordinates[]) => {
   return newFood;
 };
 
-const Home: NextPage<Props> = () => {
+const Home: NextPage = () => {
   const [snake, setSnake] = useState<Coordinates[]>(SNAKE_START_COORDINATES);
   const [direction, setDirection] = useState<Direction>(Direction.DOWN);
   const [isGameover, setIsGameover] = useState(false);
-  const [food, setFood] = useState<Coordinate>();
+  const [food, setFood] = useState<Coordinates>();
   useEffect(() => {
     setFood({ ...createNewFood(SNAKE_START_COORDINATES) });
   }, []);
 
   const moveSnake = useCallback(() => {
-    if (isGameover) return;
+    if (isGameover || food === undefined) return;
     const newSnake = JSON.parse(JSON.stringify(snake));
     const head = { ...newSnake[0] };
 
@@ -145,9 +146,9 @@ const Home: NextPage<Props> = () => {
   return (
     <div className={styles.container}>
       <div className={styles.board}>
-        {board.map((row, y) => (
+        {board.map((row: Grid[], y: number) => (
           <div key={`${y}`} className={styles.row}>
-            {row.map((item, x) => (
+            {row.map((item: Grid, x: number) => (
               <div
                 key={`${x}-${y}`}
                 className={classnames({

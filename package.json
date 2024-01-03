@@ -2,7 +2,7 @@
   "name": "snake_game",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://<your-github-username>.github.io/snake_game/",
+  "homepage": "https://{user name}.github.io/{repository name}",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +14,7 @@
     "lint:format": "prettier --write --ignore-path .gitignore './**/*.{js,jsx,ts,tsx,json}'",
     "lint:all:fix": "yarn lint:fix && yarn lint:style:fix && yarn lint:format",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d .next"
   },
   "dependencies": {
     "classnames": "^2.5.1",
@@ -29,7 +29,6 @@
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "eslint-config-prettier": "^9.1.0",
-    "gh-pages": "^6.1.1",
     "prettier": "^3.1.1",
     "stylelint": "^16.1.0",
     "stylelint-config-recess-order": "^4.4.0",
