@@ -1,5 +1,6 @@
 import styles from '@/styles/index.module.css';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import classnames from 'classnames';
 
 type Coordinates = {
   x: number;
@@ -15,7 +16,8 @@ type Direction = (typeof Direction)[keyof typeof Direction];
 
 const Grid = {
   BLANK: 'BLANK',
-  SNAKE: 'SNAKE',
+  SNAKEHEAD: 'SNAKEHEAD',
+  SNAKEBODY: 'SNAKEBODY',
   FOOD: 'FOOD',
 } as const;
 type Grid = (typeof Grid)[keyof typeof Grid];
@@ -97,7 +99,7 @@ const Home: NextPage<Props> = () => {
   }, [snake, food, direction, isGameover]);
 
   useEffect(() => {
-    const intervalId = setInterval(moveSnake, 200);
+    const intervalId = setInterval(moveSnake, 150);
 
     return () => clearInterval(intervalId);
   }, [moveSnake]);
@@ -132,8 +134,9 @@ const Home: NextPage<Props> = () => {
 
   const board = useMemo(() => {
     const newBoard = JSON.parse(JSON.stringify(BOARD));
-    snake.forEach((condinate) => {
-      newBoard[condinate.y][condinate.x] = Grid.SNAKE;
+    newBoard[snake[0].y][snake[0].x] = Grid.SNAKEHEAD;
+    snake.slice(1).forEach((condinate) => {
+      newBoard[condinate.y][condinate.x] = Grid.SNAKEBODY;
     });
     if (food !== undefined) newBoard[food.y][food.x] = Grid.FOOD;
     return newBoard;
@@ -147,16 +150,38 @@ const Home: NextPage<Props> = () => {
             {row.map((item, x) => (
               <div
                 key={`${x}-${y}`}
-                className={[
-                  styles.grid,
-                  (x + y) % 2 == 0 ? styles.grid__even : styles.grid__odd,
-                  item == Grid.SNAKE ? styles.grid__snake : '',
-                  item == Grid.FOOD ? styles.grid__food : '',
-                ].join(' ')}
+                className={classnames({
+                  [styles.grid]: true,
+                  [styles.grid__even]: (x + y) % 2 === 0,
+                  [styles.grid__odd]: (x + y) % 2 !== 0,
+                  [styles.grid__snake__head]: item === Grid.SNAKEHEAD,
+                  [styles.grid__snake__body]: item === Grid.SNAKEBODY,
+                  [styles.grid__food]: item === Grid.FOOD,
+                })}
               ></div>
             ))}
           </div>
         ))}
+      </div>
+      <div className={styles.controller}>
+        <div className={styles.column}>
+          <div className={classnames(styles.btn, styles.btn__side)} onClick={() => setDirection(Direction.LEFT)}>
+            ←
+          </div>
+        </div>
+        <div className={styles.column}>
+          <div className={classnames(styles.btn, styles.btn__center)} onClick={() => setDirection(Direction.UP)}>
+            ↑
+          </div>
+          <div className={classnames(styles.btn, styles.btn__center)} onClick={() => setDirection(Direction.DOWN)}>
+            ↓
+          </div>
+        </div>
+        <div className={styles.column}>
+          <div className={classnames(styles.btn, styles.btn__side)} onClick={() => setDirection(Direction.RIGHT)}>
+            →
+          </div>
+        </div>
       </div>
     </div>
   );

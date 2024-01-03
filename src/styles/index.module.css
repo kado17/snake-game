@@ -1,5 +1,6 @@
 .container {
   display: flex;
+  flex-flow: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
@@ -12,9 +13,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 504px;
-  height: 504px;
-  border: 2px #006400 solid;
+  width: 520px;
+  height: 520px;
+  border: 10px #006400 solid;
 }
 
 .row {
@@ -36,10 +37,51 @@
   background-color: #32cd32;
 }
 
-.grid__snake {
+.grid__snake__head {
   background-color: red;
+}
+
+.grid__snake__body {
+  background-color: #f60;
 }
 
 .grid__food {
   background-color: pink;
+}
+
+.controller {
+  display: flex;
+  justify-content: center;
+}
+
+.column {
+  display: flex;
+  flex-flow: column;
+}
+
+.btn {
+  display: block;
+  padding: 10px;
+  font-size: x-large;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  background: #f1c40f;
+  border: 1px double #fff;
+  border-radius: 4px;
+}
+
+.btn__center {
+  justify-content: center;
+  width: 174px;
+  height: 100%;
+}
+
+.btn__side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 173px;
+  height: 100%;
 }
