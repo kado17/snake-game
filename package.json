@@ -5,16 +5,14 @@
   "homepage": "https://{user name}.github.io/{repository name}",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && next export",
     "start": "next start",
     "lint": "next lint --dir src",
     "lint:fix": "next lint --fix",
     "lint:style": "stylelint src/**/*.css",
     "lint:style:fix": "stylelint --fix src/**/*.css",
     "lint:format": "prettier --write --ignore-path .gitignore './**/*.{js,jsx,ts,tsx,json}'",
-    "lint:all:fix": "yarn lint:fix && yarn lint:style:fix && yarn lint:format",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d .next"
+    "lint:all:fix": "yarn lint:fix && yarn lint:style:fix && yarn lint:format"
   },
   "dependencies": {
     "classnames": "^2.5.1",
