@@ -1,6 +1,6 @@
 import styles from '@/styles/index.module.css';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { NextPage } from 'next';
+import next, { NextPage } from 'next';
 import classnames from 'classnames';
 
 type Coordinates = {
@@ -14,6 +14,13 @@ const Direction = {
   LEFT: 'LEFT',
 } as const;
 type Direction = (typeof Direction)[keyof typeof Direction];
+
+const Opposite_Direction = {
+  UP: 'DOWN',
+  DOWN: 'UP',
+  RIGHT: 'LEFT',
+  LEFT: 'RIGHT',
+} as const;
 
 const Grid = {
   BLANK: 'BLANK',
@@ -52,6 +59,18 @@ const Home: NextPage = () => {
   useEffect(() => {
     setFood({ ...createNewFood(SNAKE_START_COORDINATES) });
   }, []);
+
+  const changeDirection = useCallback(
+    (nextDirection, prevDirection = direction) => {
+      console.log(prevDirection, Opposite_Direction[prevDirection], nextDirection);
+      if (Opposite_Direction[prevDirection] === nextDirection && snake.length >= 2) {
+        return;
+      }
+      console.log(nextDirection);
+      setDirection(() => nextDirection);
+    },
+    [direction, snake],
+  );
 
   const moveSnake = useCallback(() => {
     if (isGameover || food === undefined) return;
@@ -105,25 +124,28 @@ const Home: NextPage = () => {
     return () => clearInterval(intervalId);
   }, [moveSnake]);
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    console.log(event.key);
-    switch (event.key) {
-      case 'ArrowUp':
-        setDirection(Direction.UP);
-        break;
-      case 'ArrowDown':
-        setDirection(Direction.DOWN);
-        break;
-      case 'ArrowLeft':
-        setDirection(Direction.LEFT);
-        break;
-      case 'ArrowRight':
-        setDirection(Direction.RIGHT);
-        break;
-      default:
-        break;
-    }
-  }, []);
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      console.log(event.key);
+      switch (event.key) {
+        case 'ArrowUp':
+          changeDirection(Direction.UP);
+          break;
+        case 'ArrowDown':
+          changeDirection(Direction.DOWN);
+          break;
+        case 'ArrowLeft':
+          changeDirection(Direction.LEFT);
+          break;
+        case 'ArrowRight':
+          changeDirection(Direction.RIGHT);
+          break;
+        default:
+          break;
+      }
+    },
+    [changeDirection],
+  );
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -166,20 +188,20 @@ const Home: NextPage = () => {
       </div>
       <div className={styles.controller}>
         <div className={styles.column}>
-          <div className={classnames(styles.btn, styles.btn__side)} onClick={() => setDirection(Direction.LEFT)}>
+          <div className={classnames(styles.btn, styles.btn__side)} onClick={() => changeDirection(Direction.LEFT)}>
             ←
           </div>
         </div>
         <div className={styles.column}>
-          <div className={classnames(styles.btn, styles.btn__center)} onClick={() => setDirection(Direction.UP)}>
+          <div className={classnames(styles.btn, styles.btn__center)} onClick={() => changeDirection(Direction.UP)}>
             ↑
           </div>
-          <div className={classnames(styles.btn, styles.btn__center)} onClick={() => setDirection(Direction.DOWN)}>
+          <div className={classnames(styles.btn, styles.btn__center)} onClick={() => changeDirection(Direction.DOWN)}>
             ↓
           </div>
         </div>
         <div className={styles.column}>
-          <div className={classnames(styles.btn, styles.btn__side)} onClick={() => setDirection(Direction.RIGHT)}>
+          <div className={classnames(styles.btn, styles.btn__side)} onClick={() => changeDirection(Direction.RIGHT)}>
             →
           </div>
         </div>
