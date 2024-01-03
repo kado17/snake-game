@@ -61,7 +61,7 @@ const Home: NextPage = () => {
   }, []);
 
   const changeDirection = useCallback(
-    (nextDirection, prevDirection = direction) => {
+    (nextDirection: Direction, prevDirection: Direction = direction) => {
       console.log(prevDirection, Opposite_Direction[prevDirection], nextDirection);
       if (Opposite_Direction[prevDirection] === nextDirection && snake.length >= 2) {
         return;
