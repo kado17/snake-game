@@ -30,6 +30,14 @@ const Grid = {
 } as const;
 type Grid = (typeof Grid)[keyof typeof Grid];
 
+const GameStatus = {
+  playing: 'PLAYING',
+  suspend: 'SUSPEND',
+  clear: 'CLEAR',
+  over: 'OVER',
+} as const;
+type GameStatus = (typeof GameStatus)[keyof typeof GameStatus];
+
 const BOARD_SIZE_X = 20;
 const BOARD_SIZE_Y = 20;
 const SNAKE_START_COORDINATES: Coordinates[] = [{ x: 1, y: 1 }];
@@ -54,7 +62,7 @@ const createNewFood = (snake: Coordinates[]) => {
 const Home: NextPage = () => {
   const [snake, setSnake] = useState<Coordinates[]>(SNAKE_START_COORDINATES);
   const [direction, setDirection] = useState<Direction>(Direction.DOWN);
-  const [isGameover, setIsGameover] = useState(false);
+  const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.suspend);
   const [food, setFood] = useState<Coordinates>();
   useEffect(() => {
     setFood({ ...createNewFood(SNAKE_START_COORDINATES) });
@@ -66,14 +74,13 @@ const Home: NextPage = () => {
       if (Opposite_Direction[prevDirection] === nextDirection && snake.length >= 2) {
         return;
       }
-      console.log(nextDirection);
       setDirection(() => nextDirection);
     },
     [direction, snake],
   );
 
   const moveSnake = useCallback(() => {
-    if (isGameover || food === undefined) return;
+    if (gameStatus !== GameStatus.playing || food === undefined) return;
     const newSnake = JSON.parse(JSON.stringify(snake));
     const head = { ...newSnake[0] };
 
@@ -97,6 +104,7 @@ const Home: NextPage = () => {
     if (head.x === food.x && head.y === food.y) {
       if (newSnake.length >= BOARD_SIZE_X * BOARD_SIZE_Y) {
         console.log('GAMECLEAR');
+        setGameStatus(GameStatus.clear);
         return;
       }
       const newFood = createNewFood(snake);
@@ -111,22 +119,21 @@ const Home: NextPage = () => {
       head.y >= BOARD_SIZE_Y ||
       isDuplicateCoordinates(head, newSnake.slice(1))
     ) {
-      setIsGameover(true);
+      setGameStatus(GameStatus.over);
       console.log('GAMEOVER');
     } else {
       setSnake(newSnake);
     }
-  }, [snake, food, direction, isGameover]);
+  }, [snake, food, direction, gameStatus]);
 
   useEffect(() => {
-    const intervalId = setInterval(moveSnake, 150);
+    const intervalId = setInterval(moveSnake, 130);
 
     return () => clearInterval(intervalId);
   }, [moveSnake]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      console.log(event.key);
       switch (event.key) {
         case 'ArrowUp':
           changeDirection(Direction.UP);
@@ -140,11 +147,24 @@ const Home: NextPage = () => {
         case 'ArrowRight':
           changeDirection(Direction.RIGHT);
           break;
+        case ' ':
+          switch (gameStatus) {
+            case GameStatus.suspend:
+              setGameStatus(GameStatus.playing);
+              break;
+            case GameStatus.playing:
+              setGameStatus(GameStatus.suspend);
+              break;
+            case GameStatus.over:
+            case GameStatus.clear:
+              window.location.reload();
+          }
+          break;
         default:
           break;
       }
     },
-    [changeDirection],
+    [changeDirection, gameStatus],
   );
 
   useEffect(() => {
@@ -167,9 +187,14 @@ const Home: NextPage = () => {
 
   return (
     <div className={styles.container}>
+      <div className={styles.row}>
+        <div className={styles.header}>SNAKE-GAME</div>
+        <div className={styles.header}>SCORE:{String(snake.length).padStart(3, '0')}</div>
+      </div>
+
       <div className={styles.board}>
         {board.map((row: Grid[], y: number) => (
-          <div key={`${y}`} className={styles.row}>
+          <div key={`${y}`} className={styles.board__row}>
             {row.map((item: Grid, x: number) => (
               <div
                 key={`${x}-${y}`}
@@ -205,7 +230,37 @@ const Home: NextPage = () => {
             →
           </div>
         </div>
+        <div className={styles.column}></div>
       </div>
+      {gameStatus === GameStatus.suspend && (
+        <div
+          className={classnames(styles.btn, styles.btn__gamestatus, styles.btn__stop)}
+          onClick={() => setGameStatus(GameStatus.playing)}
+        >
+          START
+        </div>
+      )}
+      {gameStatus === GameStatus.playing && (
+        <div
+          className={classnames(styles.btn, styles.btn__gamestatus, styles.btn__playing)}
+          onClick={() => setGameStatus(GameStatus.suspend)}
+        >
+          STOP
+        </div>
+      )}
+      {(gameStatus === GameStatus.over || gameStatus === GameStatus.clear) && (
+        <div
+          className={classnames({
+            [styles.btn]: true,
+            [styles.btn__gamestatus]: true,
+            [styles.btn__clear]: gameStatus === GameStatus.clear,
+            [styles.btn__over]: gameStatus === GameStatus.over,
+          })}
+          onClick={() => window.location.reload()}
+        >
+          {gameStatus === GameStatus.clear ? 'GAME CLEAR' : gameStatus === GameStatus.over ? 'GAME OVER' : ''}
+        </div>
+      )}
     </div>
   );
 };

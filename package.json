@@ -2,7 +2,6 @@
   "name": "snake_game",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://{user name}.github.io/{repository name}",
   "scripts": {
     "dev": "next dev",
     "build": "next build && next export",

@@ -8,6 +8,22 @@
   background-color: whitesmoke;
 }
 
+.row {
+  display: flex;
+}
+
+.header {
+  justify-content: center;
+  width: 260px;
+  height: 40px;
+  padding: 10px;
+  font-size: x-large;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  background-color: #006400;
+}
+
 .board {
   display: flex;
   flex-direction: column;
@@ -18,7 +34,7 @@
   border: 10px #006400 solid;
 }
 
-.row {
+.board__row {
   display: flex;
   width: 500px;
   height: 25px;
@@ -84,4 +100,28 @@
   justify-content: center;
   width: 173px;
   height: 100%;
+}
+
+.btn:hover {
+  opacity: 0.8;
+}
+
+.btn__gamestatus {
+  width: 520px;
+}
+
+.btn__stop {
+  background-color: blue;
+}
+
+.btn__playing {
+  background-color: coral;
+}
+
+.btn__clear {
+  background-color: deepskyblue;
+}
+
+.btn__over {
+  background-color: red;
 }
