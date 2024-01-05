@@ -1,86 +1,63 @@
-import styles from '@/styles/index.module.css';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import next, { NextPage } from 'next';
-import classnames from 'classnames';
+import { NextPage } from 'next';
+import Head from 'next/head';
+import Header from '@/components/header';
+import Board from '@/components/board';
+import Controller from '@/components/controller';
+import GameStatusButton from '@/components/gameStatusButton';
+import styles from '@/styles/index.module.css';
+import { Coordinates, Direction, Grid, GameStatus, OppositeDirection } from '@/types/types';
+import { BOARD_SIZE_X, BOARD_SIZE_Y, SNAKE_START_X, SNAKE_START_Y, GAME_SPEED } from '@/constant';
+import { isDuplicateCoordinates, createNewCoordinates } from '@/coordinates';
 
-type Coordinates = {
-  x: number;
-  y: number;
-};
-const Direction = {
-  UP: 'UP',
-  DOWN: 'DOWN',
-  RIGHT: 'RIGHT',
-  LEFT: 'LEFT',
-} as const;
-type Direction = (typeof Direction)[keyof typeof Direction];
-
-const Opposite_Direction = {
-  UP: 'DOWN',
-  DOWN: 'UP',
-  RIGHT: 'LEFT',
-  LEFT: 'RIGHT',
-} as const;
-
-const Grid = {
-  BLANK: 'BLANK',
-  SNAKEHEAD: 'SNAKEHEAD',
-  SNAKEBODY: 'SNAKEBODY',
-  FOOD: 'FOOD',
-} as const;
-type Grid = (typeof Grid)[keyof typeof Grid];
-
-const GameStatus = {
-  playing: 'PLAYING',
-  suspend: 'SUSPEND',
-  clear: 'CLEAR',
-  over: 'OVER',
-} as const;
-type GameStatus = (typeof GameStatus)[keyof typeof GameStatus];
-
-const BOARD_SIZE_X = 20;
-const BOARD_SIZE_Y = 20;
-const SNAKE_START_COORDINATES: Coordinates[] = [{ x: 1, y: 1 }];
-const BOARD: Grid[][] = Array.from(new Array(BOARD_SIZE_Y), (_) => new Array(BOARD_SIZE_X).fill(Grid.BLANK));
-
-const randomCoordinates = (x_max: number, y_max: number): Coordinates => {
-  return { x: Math.floor(Math.random() * x_max), y: Math.floor(Math.random() * y_max) };
-};
-
-const isDuplicateCoordinates = (checkCoordinates: Coordinates, segments: Coordinates[]) => {
-  return segments.some((segment) => segment.x === checkCoordinates.x && segment.y === checkCoordinates.y);
-};
-
-const createNewFood = (snake: Coordinates[]) => {
-  let newFood;
-  do {
-    newFood = randomCoordinates(BOARD_SIZE_X, BOARD_SIZE_Y);
-  } while (isDuplicateCoordinates(newFood, snake));
-  return newFood;
-};
+const SNAKE_START_COORDINATES: Coordinates[] = [{ x: SNAKE_START_X, y: SNAKE_START_Y }];
+const BOARD: Grid[][] = Array.from(new Array(BOARD_SIZE_Y), () => new Array(BOARD_SIZE_X).fill(Grid.BLANK));
 
 const Home: NextPage = () => {
   const [snake, setSnake] = useState<Coordinates[]>(SNAKE_START_COORDINATES);
   const [direction, setDirection] = useState<Direction>(Direction.DOWN);
-  const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.suspend);
+  const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.SUSPEND);
   const [food, setFood] = useState<Coordinates>();
   useEffect(() => {
-    setFood({ ...createNewFood(SNAKE_START_COORDINATES) });
+    setFood({ ...createNewCoordinates(SNAKE_START_COORDINATES) });
   }, []);
 
-  const changeDirection = useCallback(
-    (nextDirection: Direction, prevDirection: Direction = direction) => {
-      console.log(prevDirection, Opposite_Direction[prevDirection], nextDirection);
-      if (Opposite_Direction[prevDirection] === nextDirection && snake.length >= 2) {
+  const setNewDirection = useCallback(
+    (nextDirection: Direction) => {
+      const nowGameState = gameStatus;
+      if (nowGameState !== GameStatus.PLAYING) {
         return;
       }
-      setDirection(() => nextDirection);
+      const prevDirection = direction;
+      if (nextDirection === prevDirection) {
+        return;
+      }
+      const nowSnake = snake;
+      if (OppositeDirection[prevDirection] === nextDirection && nowSnake.length >= 2) {
+        return;
+      }
+      setDirection(nextDirection);
     },
-    [direction, snake],
+    [direction, gameStatus, snake],
   );
 
+  const setNewGameStatus = useCallback(() => {
+    const nowGameStatus = gameStatus;
+    switch (nowGameStatus) {
+      case GameStatus.SUSPEND:
+        setGameStatus(GameStatus.PLAYING);
+        break;
+      case GameStatus.PLAYING:
+        setGameStatus(GameStatus.SUSPEND);
+        break;
+      case GameStatus.OVER:
+      case GameStatus.CLEAR:
+        window.location.reload();
+    }
+  }, [gameStatus]);
+
   const moveSnake = useCallback(() => {
-    if (gameStatus !== GameStatus.playing || food === undefined) return;
+    if (gameStatus !== GameStatus.PLAYING || food === undefined) return;
     const newSnake = JSON.parse(JSON.stringify(snake));
     const head = { ...newSnake[0] };
 
@@ -103,11 +80,10 @@ const Home: NextPage = () => {
     newSnake.unshift(head);
     if (head.x === food.x && head.y === food.y) {
       if (newSnake.length >= BOARD_SIZE_X * BOARD_SIZE_Y) {
-        console.log('GAMECLEAR');
-        setGameStatus(GameStatus.clear);
+        setGameStatus(GameStatus.CLEAR);
         return;
       }
-      const newFood = createNewFood(snake);
+      const newFood = createNewCoordinates(newSnake);
       setFood(newFood);
     } else {
       newSnake.pop();
@@ -119,52 +95,42 @@ const Home: NextPage = () => {
       head.y >= BOARD_SIZE_Y ||
       isDuplicateCoordinates(head, newSnake.slice(1))
     ) {
-      setGameStatus(GameStatus.over);
-      console.log('GAMEOVER');
+      setGameStatus(GameStatus.OVER);
+      return;
     } else {
       setSnake(newSnake);
     }
   }, [snake, food, direction, gameStatus]);
 
   useEffect(() => {
-    const intervalId = setInterval(moveSnake, 130);
-
+    const intervalId = setInterval(moveSnake, GAME_SPEED);
     return () => clearInterval(intervalId);
   }, [moveSnake]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
+      if (event.key === ' ') {
+        setNewGameStatus();
+        return;
+      }
       switch (event.key) {
         case 'ArrowUp':
-          changeDirection(Direction.UP);
+          setNewDirection(Direction.UP);
           break;
         case 'ArrowDown':
-          changeDirection(Direction.DOWN);
+          setNewDirection(Direction.DOWN);
           break;
         case 'ArrowLeft':
-          changeDirection(Direction.LEFT);
+          setNewDirection(Direction.LEFT);
           break;
         case 'ArrowRight':
-          changeDirection(Direction.RIGHT);
-          break;
-        case ' ':
-          switch (gameStatus) {
-            case GameStatus.suspend:
-              setGameStatus(GameStatus.playing);
-              break;
-            case GameStatus.playing:
-              setGameStatus(GameStatus.suspend);
-              break;
-            case GameStatus.over:
-            case GameStatus.clear:
-              window.location.reload();
-          }
+          setNewDirection(Direction.RIGHT);
           break;
         default:
           break;
       }
     },
-    [changeDirection, gameStatus],
+    [setNewDirection, setNewGameStatus],
   );
 
   useEffect(() => {
@@ -175,7 +141,7 @@ const Home: NextPage = () => {
     };
   }, [handleKeyDown]);
 
-  const board = useMemo(() => {
+  const board = useMemo((): Grid[][] => {
     const newBoard = JSON.parse(JSON.stringify(BOARD));
     newBoard[snake[0].y][snake[0].x] = Grid.SNAKEHEAD;
     snake.slice(1).forEach((condinate) => {
@@ -186,82 +152,17 @@ const Home: NextPage = () => {
   }, [snake, food]);
 
   return (
-    <div className={styles.container}>
-      <div className={styles.row}>
-        <div className={styles.header}>SNAKE-GAME</div>
-        <div className={styles.header}>SCORE:{String(snake.length).padStart(3, '0')}</div>
+    <>
+      <Head>
+        <title>Snake-game</title>
+      </Head>
+      <div className={styles.container}>
+        <Header snakeLength={snake.length} />
+        <Board board={board} />
+        <Controller setNewDirection={setNewDirection.bind(this)} />
+        <GameStatusButton gameStatus={gameStatus} setNewGameStatus={setNewGameStatus.bind(this)} />
       </div>
-
-      <div className={styles.board}>
-        {board.map((row: Grid[], y: number) => (
-          <div key={`${y}`} className={styles.board__row}>
-            {row.map((item: Grid, x: number) => (
-              <div
-                key={`${x}-${y}`}
-                className={classnames({
-                  [styles.grid]: true,
-                  [styles.grid__even]: (x + y) % 2 === 0,
-                  [styles.grid__odd]: (x + y) % 2 !== 0,
-                  [styles.grid__snake__head]: item === Grid.SNAKEHEAD,
-                  [styles.grid__snake__body]: item === Grid.SNAKEBODY,
-                  [styles.grid__food]: item === Grid.FOOD,
-                })}
-              ></div>
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className={styles.controller}>
-        <div className={styles.column}>
-          <div className={classnames(styles.btn, styles.btn__side)} onClick={() => changeDirection(Direction.LEFT)}>
-            ←
-          </div>
-        </div>
-        <div className={styles.column}>
-          <div className={classnames(styles.btn, styles.btn__center)} onClick={() => changeDirection(Direction.UP)}>
-            ↑
-          </div>
-          <div className={classnames(styles.btn, styles.btn__center)} onClick={() => changeDirection(Direction.DOWN)}>
-            ↓
-          </div>
-        </div>
-        <div className={styles.column}>
-          <div className={classnames(styles.btn, styles.btn__side)} onClick={() => changeDirection(Direction.RIGHT)}>
-            →
-          </div>
-        </div>
-        <div className={styles.column}></div>
-      </div>
-      {gameStatus === GameStatus.suspend && (
-        <div
-          className={classnames(styles.btn, styles.btn__gamestatus, styles.btn__stop)}
-          onClick={() => setGameStatus(GameStatus.playing)}
-        >
-          START
-        </div>
-      )}
-      {gameStatus === GameStatus.playing && (
-        <div
-          className={classnames(styles.btn, styles.btn__gamestatus, styles.btn__playing)}
-          onClick={() => setGameStatus(GameStatus.suspend)}
-        >
-          STOP
-        </div>
-      )}
-      {(gameStatus === GameStatus.over || gameStatus === GameStatus.clear) && (
-        <div
-          className={classnames({
-            [styles.btn]: true,
-            [styles.btn__gamestatus]: true,
-            [styles.btn__clear]: gameStatus === GameStatus.clear,
-            [styles.btn__over]: gameStatus === GameStatus.over,
-          })}
-          onClick={() => window.location.reload()}
-        >
-          {gameStatus === GameStatus.clear ? 'GAME CLEAR' : gameStatus === GameStatus.over ? 'GAME OVER' : ''}
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 export default Home;
