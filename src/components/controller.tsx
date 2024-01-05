@@ -25,7 +25,6 @@ class Controller extends Component<{ setNewDirection: (nextDirection: Direction)
             →
           </div>
         </div>
-        <div className={styles.column}></div>
       </div>
     );
   }

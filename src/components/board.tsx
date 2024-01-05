@@ -21,7 +21,7 @@ class Board extends Component<{ board: Grid[][] }> {
                   [styles.grid__snake__body]: item === Grid.SNAKEBODY,
                   [styles.grid__food]: item === Grid.FOOD,
                 })}
-              ></div>
+              />
             ))}
           </div>
         ))}

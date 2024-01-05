@@ -1,5 +1,5 @@
 import { BOARD_SIZE_X, BOARD_SIZE_Y } from './constant';
-import { Coordinates } from '@/types/types';
+import type { Coordinates } from '@/types/types';
 
 const randomCoordinates = (x_max: number, y_max: number): Coordinates => {
   return { x: Math.floor(Math.random() * x_max), y: Math.floor(Math.random() * y_max) };

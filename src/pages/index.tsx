@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { NextPage } from 'next';
+import type { NextPage } from 'next';
 import Head from 'next/head';
 import Header from '@/components/header';
 import Board from '@/components/board';
 import Controller from '@/components/controller';
 import GameStatusButton from '@/components/gameStatusButton';
 import styles from '@/styles/index.module.css';
-import { Coordinates, Direction, Grid, GameStatus, OppositeDirection } from '@/types/types';
+import { Direction, Grid, GameStatus, OppositeDirection } from '@/types/types';
+import type { Coordinates } from '@/types/types';
 import { BOARD_SIZE_X, BOARD_SIZE_Y, SNAKE_START_X, SNAKE_START_Y, GAME_SPEED } from '@/constant';
 import { isDuplicateCoordinates, createNewCoordinates } from '@/coordinates';
 
